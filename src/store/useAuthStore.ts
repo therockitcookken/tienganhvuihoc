@@ -20,7 +20,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, pass) => {
     set({ isLoading: true });
     try {
-      if (auth && db) {
+      const isDummy = import.meta.env.VITE_FIREBASE_API_KEY === 'dummy_api_key' || !import.meta.env.VITE_FIREBASE_API_KEY;
+      
+      if (auth && db && !isDummy) {
         const cred = await signInWithEmailAndPassword(auth, email, pass);
         const docRef = doc(db, 'users', cred.user.uid);
         const docSnap = await getDoc(docRef);
@@ -47,7 +49,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (email, pass, name) => {
     set({ isLoading: true });
     try {
-      if (auth && db) {
+      const isDummy = import.meta.env.VITE_FIREBASE_API_KEY === 'dummy_api_key' || !import.meta.env.VITE_FIREBASE_API_KEY;
+
+      if (auth && db && !isDummy) {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         const newUser: User = {
           uid: cred.user.uid,
