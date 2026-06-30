@@ -13,13 +13,11 @@ export const Login: React.FC = () => {
 
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      login(email);
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 600); // Wait for mock login
+      await login(email, 'password123');
+      navigate(from, { replace: true });
     }
   };
 

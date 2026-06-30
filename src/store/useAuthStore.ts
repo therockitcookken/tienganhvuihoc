@@ -1,33 +1,90 @@
 import { create } from 'zustand';
 import { mockUsers } from '../data/mockData';
 import type { User } from '../data/mockData';
+import { auth, db } from '../lib/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface AuthState {
   user: User | null;
-  isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string) => void;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isAuthenticated: false,
   isLoading: false,
-  login: (email: string) => {
+
+  login: async (email, pass) => {
     set({ isLoading: true });
-    // Simulate API call
-    setTimeout(() => {
-      const foundUser = mockUsers.find(u => u.email === email);
-      if (foundUser) {
-        set({ user: foundUser, isAuthenticated: true, isLoading: false });
+    try {
+      if (auth && db) {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const docRef = doc(db, 'users', cred.user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          set({ user: docSnap.data() as User, isLoading: false });
+        } else {
+          throw new Error('User data not found');
+        }
       } else {
-        // Mock fallback to a student user
-        set({ user: mockUsers[4], isAuthenticated: true, isLoading: false });
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        const found = mockUsers.find(u => u.email === email);
+        if (found) {
+          set({ user: found, isLoading: false });
+        } else {
+          throw new Error('Sai tài khoản hoặc mật khẩu (Mock)');
+        }
       }
-    }, 500);
+    } catch (error: any) {
+      set({ isLoading: false });
+      throw error;
+    }
   },
-  logout: () => {
-    set({ user: null, isAuthenticated: false });
+
+  register: async (email, pass, name) => {
+    set({ isLoading: true });
+    try {
+      if (auth && db) {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        const newUser: User = {
+          uid: cred.user.uid,
+          email,
+          displayName: name,
+          role: 'student',
+          xp: 0,
+          streak: 0,
+          vipStatus: 'none',
+        };
+        await setDoc(doc(db, 'users', cred.user.uid), newUser);
+        set({ user: newUser, isLoading: false });
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        set({
+          user: {
+            uid: Math.random().toString(),
+            email,
+            displayName: name,
+            role: 'student',
+            xp: 0,
+            streak: 0,
+            vipStatus: 'none',
+          },
+          isLoading: false
+        });
+      }
+    } catch (error: any) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    if (auth) {
+      await signOut(auth);
+    }
+    set({ user: null });
   },
 }));

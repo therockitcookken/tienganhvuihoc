@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Button } from '../ui/Button';
 
 export const Navbar: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -25,7 +25,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex space-x-8">
             <Link to="/courses" className="text-gray-700 hover:text-yellow-600 px-3 py-2 rounded-md font-medium">Khóa Học</Link>
             <Link to="/pricing" className="text-gray-700 hover:text-yellow-600 px-3 py-2 rounded-md font-medium">Bảng Giá</Link>
-            {isAuthenticated && (
+            {!!user && (
               <Link to="/dashboard" className="text-yellow-700 font-bold hover:text-yellow-800 px-3 py-2 rounded-md">
                 Khu Học Tập
               </Link>
@@ -38,7 +38,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
+            {!!user ? (
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-sm font-semibold text-gray-900">{user?.displayName}</span>

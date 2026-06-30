@@ -5,6 +5,8 @@ import { mockCourses } from '../data/mockData';
 import { Button } from '../components/ui/Button';
 import { Flashcard } from '../components/learning/Flashcard';
 import { Quiz } from '../components/learning/Quiz';
+import { HanziWriterComponent } from '../components/learning/HanziWriterComponent';
+import { playAudio } from '../lib/speech';
 
 export const CourseDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +14,7 @@ export const CourseDetail: React.FC = () => {
   // Mock course loading. Usually id would be the course id
   const course = mockCourses[0]; 
 
-  const [activeTab, setActiveTab] = useState<'flashcard' | 'quiz'>('flashcard');
+  const [activeTab, setActiveTab] = useState<'flashcard' | 'quiz' | 'writing'>('flashcard');
 
   // Gamification states
   const [xpGained, setXpGained] = useState(0);
@@ -30,12 +32,17 @@ export const CourseDetail: React.FC = () => {
         &larr; Quay lại Dashboard
       </Button>
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
-        <p className="text-gray-500 mt-2">{course.description}</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
+          <p className="text-gray-500 mt-2">{course.description}</p>
+        </div>
+        <Button variant="outline" onClick={() => playAudio(course.title, course.language)}>
+          🔊 Phát âm
+        </Button>
       </div>
 
-      <div className="flex space-x-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
         <Button 
           variant={activeTab === 'flashcard' ? 'primary' : 'secondary'}
           onClick={() => setActiveTab('flashcard')}
@@ -48,6 +55,14 @@ export const CourseDetail: React.FC = () => {
         >
           Trắc nghiệm (Quiz)
         </Button>
+        {course.language === 'zh' && (
+          <Button 
+            variant={activeTab === 'writing' ? 'primary' : 'secondary'}
+            onClick={() => setActiveTab('writing')}
+          >
+            Luyện viết (Hán tự)
+          </Button>
+        )}
       </div>
 
       <motion.div
@@ -59,9 +74,10 @@ export const CourseDetail: React.FC = () => {
       >
         {activeTab === 'flashcard' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Flashcard frontContent="Hello" backContent="Xin chào" />
-            <Flashcard frontContent="Goodbye" backContent="Tạm biệt" />
-            <Flashcard frontContent="Thank you" backContent="Cảm ơn" />
+            <div className="relative group">
+              <Flashcard frontContent={course.language === 'zh' ? '你好' : 'Hello'} backContent="Xin chào" pinyin={course.language === 'zh' ? 'nǐ hǎo' : undefined} />
+              <button onClick={() => playAudio(course.language === 'zh' ? '你好' : 'Hello', course.language)} className="absolute top-4 right-4 bg-white/80 p-2 rounded-full shadow hover:bg-yellow-100 z-10 transition-colors">🔊</button>
+            </div>
           </div>
         )}
 
@@ -69,7 +85,7 @@ export const CourseDetail: React.FC = () => {
           <div className="py-8">
             <Quiz 
               question="Từ nào có nghĩa là 'Xin chào'?"
-              options={["Goodbye", "Hello", "Sorry", "Thank you"]}
+              options={["Goodbye", "Hello / 你好", "Sorry", "Thank you"]}
               correctAnswerIndex={1}
               onComplete={handleQuizComplete}
             />
@@ -82,6 +98,12 @@ export const CourseDetail: React.FC = () => {
                 + {xpGained} XP! 🎉
               </motion.div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'writing' && course.language === 'zh' && (
+          <div className="flex justify-center py-8">
+             <HanziWriterComponent character="你" width={200} height={200} />
           </div>
         )}
       </motion.div>
