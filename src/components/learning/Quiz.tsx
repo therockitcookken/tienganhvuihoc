@@ -5,11 +5,11 @@ import { Card } from '../ui/Card';
 interface QuizProps {
   question: string;
   options: string[];
-  correctAnswerIndex: number;
+  correctAnswer: string;
   onComplete: (isCorrect: boolean) => void;
 }
 
-export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswerIndex, onComplete }) => {
+export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswer, onComplete }) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
 
@@ -20,7 +20,7 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswerInde
     
     // Add XP / streak logic here usually triggered by onComplete
     setTimeout(() => {
-      onComplete(idx === correctAnswerIndex);
+      onComplete(options[idx] === correctAnswer);
     }, 1500);
   };
 
@@ -31,7 +31,7 @@ export const Quiz: React.FC<QuizProps> = ({ question, options, correctAnswerInde
         <AnimatePresence>
           {options.map((option, idx) => {
             const isSelected = selectedIdx === idx;
-            const isCorrect = idx === correctAnswerIndex;
+            const isCorrect = option === correctAnswer;
             
             let btnClass = "bg-white border-2 border-gray-200 text-gray-700 hover:border-yellow-400";
             if (isAnswered) {
